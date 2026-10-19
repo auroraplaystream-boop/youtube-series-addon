@@ -23,3 +23,10 @@ Resposta JSON com `results`, `url` e `embedUrl`. Use `embedUrl` apenas onde o pl
 - Não contorna DRM, não baixa vídeos e não fornece links diretos de mídia.
 - A busca atual é para séries; playlists e busca por canais oficiais ainda não foram implementadas.
 - Cache em memória dura 10 minutos.
+
+## 1.1.0
+- Streams usam `ytId`, para tocar no player incorporado do cliente, sem abrir uma página externa.
+- Só entram vídeos públicos, gravados, incorporáveis, com pelo menos dez minutos e título que identifique a série, temporada e episódio pedidos.
+- Lives, estreias agendadas, trailers, resumos e episódios conflitantes são rejeitados. A descrição do canal não valida um episódio.
+- Informações ausentes não são tratadas como confirmação de dublagem. Incorporação não garante ausência de anúncios nem que os dados declarados pelo canal descrevam fielmente o vídeo.
+- A chave da API continua exclusiva do servidor. A atualização não a coloca na extensão nem no site.
