@@ -18,7 +18,9 @@ export function rankEpisode(video,title,season,episode,context={}){
  if(!/^[\w-]{11}$/.test(video.id||'')||video.status?.privacyStatus!=='public'||video.status?.embeddable!==true||snippet.liveBroadcastContent!=='none'||video.liveStreamingDetails||seconds<600||bad.test(tokens(name).join(' '))||!episodeMatches(name,season,episode))return null;
  const wanted=tokens(title).filter(w=>!['the','a','o','as','os','de','do','da','and'].includes(w)),actual=tokens(name);
  if(!wanted.length||!wanted.every(w=>actual.includes(w)))return null;
- const evidence=sourceReleaseEvidence(video,context);
+ const evidence=sourceReleaseEvidence(video,context)||(
+  context.curatedReleaseYear===context.releaseYear&&snippet.channelTitle==='Séries da TV'
+  ?{year:context.curatedReleaseYear,basis:'curated-playlist'}:null);
  if(context.versionYears?.length>1&&(!evidence||evidence.year!==context.releaseYear))return null;
  // Subtitle language is never evidence of a Portuguese audio track.
  const language=snippet.defaultAudioLanguage||'';

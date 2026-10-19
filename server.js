@@ -30,7 +30,7 @@ async function searchEpisodes(title,season,episode,context={}){
  const task=(async()=>{
   const queries=[`${clean(title)} temporada ${season} episódio ${episode} completo português dublado`,`${clean(title)} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')} dublado`];
   let normalized=[];
-  for(const id of seriesPlaylists[context.imdb]||[]){try{const videos=await playlistVideos(id);normalized.push(...videos.map(video=>rankEpisode(video,title,season,episode,context)).filter(Boolean))}catch(error){console.error('Playlist:',error.message)}}
+  for(const id of seriesPlaylists[context.imdb]||[]){try{const videos=await playlistVideos(id);normalized.push(...videos.map(video=>rankEpisode(video,title,season,episode,{...context,curatedReleaseYear:context.imdb==='tt0111987'?1995:undefined})).filter(Boolean))}catch(error){console.error('Playlist:',error.message)}}
   if(normalized.length){normalized.sort((a,b)=>b.score-a.score);cache.set(key,{time:Date.now(),data:normalized});return normalized;}
   for(const q of queries){
    const result=await youtube('search',{part:'snippet',q,type:'video',maxResults:25,videoEmbeddable:'true',safeSearch:'moderate',relevanceLanguage:'pt'});
