@@ -3,8 +3,8 @@ const bad=/\b(trailer|teaser|review|react|reaction|resumo|recap|analise|explicad
 export function durationSeconds(iso=''){const m=/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);return m?Number(m[1]||0)*86400+Number(m[2]||0)*3600+Number(m[3]||0)*60+Number(m[4]||0):0}
 export function episodeMatches(title,season,episode){
  const text=tokens(title).join(' ');
- const pairs=[...text.matchAll(/\bs\s*(\d+)\s*e\s*(\d+)\b|\b(\d+)x(\d+)\b|\b(?:temporada|season|t)\s*(\d+)\s*(?:episodio|episode|ep|e)\s*(\d+)\b/g)];
- const seasons=[...text.matchAll(/\b(?:temporada|season|t)\s*(\d+)\b/g)].map(m=>Number(m[1]));
+ const pairs=[...text.matchAll(/\bs\s*(\d+)\s*e\s*(\d+)\b|\b(\d+)x(\d+)\b|\b(?:temporada|season|temp|t)\s*(\d+)\s*(?:episodio|episode|ep|e)\s*(\d+)\b/g)];
+ const seasons=[...text.matchAll(/\b(?:temporada|season|temp|t)\s*(\d+)\b/g)].map(m=>Number(m[1]));
  const episodes=[...text.matchAll(/\b(?:episodio|episode|ep)\s*(\d+)\b/g)].map(m=>Number(m[1]));
  if(pairs.some(m=>Number(m[1]??m[3]??m[5])!==season||Number(m[2]??m[4]??m[6])!==episode)||seasons.some(s=>s!==season)||episodes.some(e=>e!==episode))return false;
  return pairs.length>0||seasons.includes(season)&&episodes.includes(episode);
