@@ -15,6 +15,7 @@ test('incomplete pieces and an unverified remake cannot be offered as full episo
  assert.equal(rankEpisode(video,'Goosebumps',2,1,oldGoosebumps),null);
  assert.equal(rankEpisode({...video,snippet:{...video.snippet,title:'Goosebumps S02E01 dublado',description:''},contentDetails:{duration:'PT22M'}},'Goosebumps',2,1,oldGoosebumps),null);
 });
+test('later original-season dates remain scoped to the 1995 series in its verified playlist',()=>{const video={...sample,snippet:{...sample.snippet,title:'Goosebumps T02E01 dublado',channelTitle:'Séries da TV',description:'Episódio da segunda temporada (1996) do seriado.'}};assert.equal(rankEpisode(video,'Goosebumps',2,1,{...oldGoosebumps,curatedReleaseYear:1995}).releaseYear,1995)});
 test('Goosebumps keeps independently declared original-year proof for the Luna remake guard',()=>{
  const video={...sample,id:'4ms9WXDSAWE',snippet:{...sample.snippet,title:'Goosebumps: Histórias de Arrepiar T01E01/02 - A Máscara Maldita (Dublado)',description:'Episódio 1 e 2 da 1ª temporada (1995) do seriado Goosebumps.',publishedAt:'2022-12-28T00:00:00Z'}};
  const result=rankEpisode(video,'Goosebumps',1,1,oldGoosebumps);assert.equal(result.releaseYear,1995);assert.equal(result.portugueseAudio,true);assert.deepEqual(result.combinedEpisodes,{season:1,first:1,last:2});

@@ -18,9 +18,12 @@ export function rankEpisode(video,title,season,episode,context={}){
  if(!/^[\w-]{11}$/.test(video.id||'')||video.status?.privacyStatus!=='public'||video.status?.embeddable!==true||snippet.liveBroadcastContent!=='none'||video.liveStreamingDetails||seconds<600||bad.test(tokens(name).join(' '))||!episodeMatches(name,season,episode))return null;
  const wanted=tokens(title).filter(w=>!['the','a','o','as','os','de','do','da','and'].includes(w)),actual=tokens(name);
  if(!wanted.length||!wanted.every(w=>actual.includes(w)))return null;
- const evidence=sourceReleaseEvidence(video,context)||(
-  context.curatedReleaseYear===context.releaseYear&&snippet.channelTitle==='Séries da TV'
-  ?{year:context.curatedReleaseYear,basis:'curated-playlist'}:null);
+ const declared=sourceReleaseEvidence(video,context);
+ // Original-run episode descriptions date later seasons 1996–1998. Those
+ // are episode years, not the release year of another same-name series.
+ const curated=context.curatedReleaseYear===1995&&context.releaseYear===1995&&snippet.channelTitle==='Séries da TV';
+ const evidence=curated&&(!declared||declared.year>=1995&&declared.year<=1998)
+  ?{year:1995,basis:'curated-playlist'}:declared;
  if(context.versionYears?.length>1&&(!evidence||evidence.year!==context.releaseYear))return null;
  // Subtitle language is never evidence of a Portuguese audio track.
  const language=snippet.defaultAudioLanguage||'';
