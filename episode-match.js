@@ -16,6 +16,6 @@ export function rankEpisode(video,title,season,episode){
  if(!wanted.length||!wanted.every(w=>actual.includes(w)))return null;
  // Subtitle language is never evidence of a Portuguese audio track.
  const language=snippet.defaultAudioLanguage||'';
- const portugueseAudio=/^pt(?:-|$)/i.test(language)||!language&&/\bdublado\b|\baudio\s+(?:em\s+)?portugues\b|\bpt br\b/i.test(tokens(name).join(' '));
+ const portugueseAudio=/^pt(?:-|$)/i.test(language)||!language&&(/\bdublado\b|\baudio\s+(?:em\s+)?portugues\b/i.test(tokens(name).join(' '))||/\bpt br\b/i.test(tokens(name).join(' '))&&!/legendad|subtitles?|legendas?/i.test(name));
  return {id:video.id,title:name,channel:snippet.channelTitle||'',seconds,score:portugueseAudio?20:10,portugueseAudio,embeddable:true,privacy:'public'};
 }
