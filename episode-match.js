@@ -19,10 +19,11 @@ export function rankEpisode(video,title,season,episode,context={}){
  const wanted=tokens(title).filter(w=>!['the','a','o','as','os','de','do','da','and'].includes(w)),actual=tokens(name);
  if(!wanted.length||!wanted.every(w=>actual.includes(w)))return null;
  const evidence=sourceReleaseEvidence(video,context);
- if(context.versionYears?.length>1&&evidence&&evidence.year!==context.releaseYear)return null;
+ if(context.versionYears?.length>1&&(!evidence||evidence.year!==context.releaseYear))return null;
  // Subtitle language is never evidence of a Portuguese audio track.
  const language=snippet.defaultAudioLanguage||'';
  const portugueseAudio=/^pt(?:-|$)/i.test(language)||!language&&(/\bdublado\b|\baudio\s+(?:em\s+)?portugues\b/i.test(tokens(name).join(' '))||/\bpt br\b/i.test(tokens(name).join(' '))&&!/legendad|subtitles?|legendas?/i.test(name));
  const combined=combinedEpisodes(name)[0];
+ if(/\b(?:parte|part|pt)\s*\.?\s*\d+/i.test(name)&&(seconds<1080||combined&&seconds<(combined.last-combined.first+1)*1080))return null;
  return {id:video.id,title:name,channel:snippet.channelTitle||'',seconds,score:(portugueseAudio?20:10)+(combined?0:2),portugueseAudio,embeddable:true,privacy:'public',...(evidence&&(!context.releaseYear||evidence.year===context.releaseYear)?{releaseYear:evidence.year,releaseEvidence:evidence.basis}:{}),...(combined?{combinedEpisodes:combined}:{})};
 }

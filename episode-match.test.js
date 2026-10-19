@@ -8,6 +8,11 @@ test('official titles with episode before abbreviated season remain recognized',
 test('Portuguese subtitles do not advertise Portuguese audio',()=>{assert.equal(rankEpisode({...sample,snippet:{...sample.snippet,title:'MasterChef Profissionais S01E02 legendado PT-BR'}},'MasterChef Profissionais',1,2).portugueseAudio,false)});
 
 const oldGoosebumps={title:'Goosebumps',releaseYear:1995,versionYears:[1995,2023]};
+test('incomplete pieces and an unverified remake cannot be offered as full episodes',()=>{
+ const video={...sample,snippet:{...sample.snippet,title:'Goosebumps S02E01-02 - Parte 3 Dublado',description:'Série 1995'},contentDetails:{duration:'PT15M'}};
+ assert.equal(rankEpisode(video,'Goosebumps',2,1,oldGoosebumps),null);
+ assert.equal(rankEpisode({...video,snippet:{...video.snippet,title:'Goosebumps S02E01 dublado',description:''},contentDetails:{duration:'PT22M'}},'Goosebumps',2,1,oldGoosebumps),null);
+});
 test('Goosebumps keeps independently declared original-year proof for the Luna remake guard',()=>{
  const video={...sample,id:'4ms9WXDSAWE',snippet:{...sample.snippet,title:'Goosebumps: Histórias de Arrepiar T01E01/02 - A Máscara Maldita (Dublado)',description:'Episódio 1 e 2 da 1ª temporada (1995) do seriado Goosebumps.',publishedAt:'2022-12-28T00:00:00Z'}};
  const result=rankEpisode(video,'Goosebumps',1,1,oldGoosebumps);assert.equal(result.releaseYear,1995);assert.equal(result.portugueseAudio,true);assert.deepEqual(result.combinedEpisodes,{season:1,first:1,last:2});

@@ -25,14 +25,15 @@ function parseId(raw){const parts=raw.split(':');if(parts[0]==='ytseries')return
 async function searchEpisodes(title,season,episode,context={}){
  const key=JSON.stringify([title,season,episode,context.releaseYear,context.versionYears]);const cached=cache.get(key);if(cached&&Date.now()-cached.time<TTL)return cached.data;if(pending.has(key))return pending.get(key);
  const task=(async()=>{
-  const queries=[`${clean(title)} temporada ${season} episódio ${episode} dublado`,`${clean(title)} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')} dublado`];
+  const queries=[`${clean(title)} temporada ${season} episódio ${episode} completo português dublado`,`${clean(title)} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')} dublado`];
   let normalized=[];
   for(const q of queries){
    const result=await youtube('search',{part:'snippet',q,type:'video',maxResults:25,videoEmbeddable:'true',safeSearch:'moderate',relevanceLanguage:'pt'});
    const ids=(result.items||[]).map(x=>x.id?.videoId).filter(Boolean);if(!ids.length)continue;
    const details=await youtube('videos',{part:'contentDetails,status,snippet,liveStreamingDetails',id:ids.join(',')});
-   normalized=(details.items||[]).map(x=>rankEpisode(x,title,season,episode,context)).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,12);
-   if(normalized.length)break;
+   const found=(details.items||[]).map(x=>rankEpisode(x,title,season,episode,context)).filter(Boolean);
+   normalized=[...new Map([...normalized,...found].map(v=>[v.id,v])).values()].sort((a,b)=>b.score-a.score).slice(0,12);
+   if(normalized.some(v=>v.portugueseAudio))break;
   }
   if(cache.size>=256)cache.delete(cache.keys().next().value);cache.set(key,{time:Date.now(),data:normalized});return normalized;
  })();pending.set(key,task);try{return await task}finally{pending.delete(key)}
