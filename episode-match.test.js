@@ -6,3 +6,15 @@ test('live, upcoming, private, blocked embeds and short videos never enter playb
 test('a matching episode in a description cannot rescue a wrong video title',()=>{assert.equal(rankEpisode({...sample,snippet:{...sample.snippet,title:'Outra série S01E02',description:sample.snippet.title}},'MasterChef Profissionais',1,2),null);assert.equal(episodeMatches('Show S01E02',1,2),true)});
 test('official titles with episode before abbreviated season remain recognized',()=>{assert.equal(episodeMatches('MASTERCHEF PROFISSIONAIS (04/10/2016) | PARTE 1 | EP 1 | TEMP 01',1,1),true);assert.equal(episodeMatches('MASTERCHEF PROFISSIONAIS | EP 1 | TEMP 02',1,1),false)});
 test('Portuguese subtitles do not advertise Portuguese audio',()=>{assert.equal(rankEpisode({...sample,snippet:{...sample.snippet,title:'MasterChef Profissionais S01E02 legendado PT-BR'}},'MasterChef Profissionais',1,2).portugueseAudio,false)});
+
+const oldGoosebumps={title:'Goosebumps',releaseYear:1995,versionYears:[1995,2023]};
+test('Goosebumps keeps independently declared original-year proof for the Luna remake guard',()=>{
+ const video={...sample,id:'4ms9WXDSAWE',snippet:{...sample.snippet,title:'Goosebumps: Histórias de Arrepiar T01E01/02 - A Máscara Maldita (Dublado)',description:'Episódio 1 e 2 da 1ª temporada (1995) do seriado Goosebumps.',publishedAt:'2022-12-28T00:00:00Z'}};
+ const result=rankEpisode(video,'Goosebumps',1,1,oldGoosebumps);assert.equal(result.releaseYear,1995);assert.equal(result.portugueseAudio,true);assert.deepEqual(result.combinedEpisodes,{season:1,first:1,last:2});
+ assert.equal(rankEpisode(video,'Goosebumps',1,2,oldGoosebumps),null,'a double episode must not claim to begin at its second half');
+ assert.equal(rankEpisode({...video,snippet:{...video.snippet,title:'Goosebumps 2023 T01E01 dublado'}},'Goosebumps',1,1,oldGoosebumps),null);
+});
+test('compact T1.E1, ordinal seasons and reversed episode labels are supported without guessing missing seasons',()=>{
+ for(const title of ['GOOSEBUMPS A MÁSCARA MALDITA PT. 1 (DUBLADO) - T1.E1','Goosebumps episódio 1 da 1ª temporada dublado','Goosebumps T01E01 dublado'])assert.equal(episodeMatches(title,1,1),true);
+ for(const title of ['Goosebumps T02E01','Goosebumps T01E02','Goosebumps episódio 1','Goosebumps T01E01/02 T02E01'])assert.equal(episodeMatches(title,1,1),false);
+});

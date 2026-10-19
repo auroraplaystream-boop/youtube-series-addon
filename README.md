@@ -9,7 +9,7 @@ Servidor Node.js com addon de streams externos para Stremio e API JSON para Luna
 4. Abra `http://localhost:7000/health` para testar.
 
 ## Stremio
-Hospede o servidor em HTTPS público e instale `https://SEU-DOMINIO/manifest.json` no Stremio. O addon fornece **externalUrl** (abre YouTube), não URLs de mídia extraídas. Suporta IDs de episódio no formato `tt1234567:1:2`, consultando o nome da série no Cinemeta. Não adiciona catálogo próprio ao Stremio.
+Hospede o servidor em HTTPS público e instale `https://SEU-DOMINIO/manifest.json` no Stremio. O addon fornece **ytId** para o player incorporado do cliente, sem extrair URLs de mídia. Suporta IDs de episódio no formato `tt1234567:1:2`, consultando o nome da série no Cinemeta. Não adiciona catálogo próprio ao Stremio.
 
 ## Luna
 `GET /api/luna/search?title=Nome%20da%20Serie&season=1&episode=2`
@@ -30,3 +30,9 @@ Resposta JSON com `results`, `url` e `embedUrl`. Use `embedUrl` apenas onde o pl
 - Lives, estreias agendadas, trailers, resumos e episódios conflitantes são rejeitados. A descrição do canal não valida um episódio.
 - Informações ausentes não são tratadas como confirmação de dublagem. Incorporação não garante ausência de anúncios nem que os dados declarados pelo canal descrevam fielmente o vídeo.
 - A chave da API continua exclusiva do servidor. A atualização não a coloca na extensão nem no site.
+
+## 1.2.0
+- Preserva evidência do ano original da fonte para distinguir versões homônimas no Luna. O ano pedido pelo usuário sozinho nunca é prova.
+- Aceita T1.E1 e temporadas ordinais, identifica vídeos duplos e não apresenta a primeira metade como início do segundo episódio.
+- Tenta uma busca alternativa por SxxExx quando necessário e compartilha requisições simultâneas idênticas.
+- Falhas do serviço retornam erro HTTP em vez de fingir ausência de episódios.
