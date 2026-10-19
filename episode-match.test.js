@@ -1,4 +1,5 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {rankEpisode,episodeMatches} from './episode-match.js';
+import test from 'node:test';import assert from 'node:assert/strict';import {rankEpisode,episodeMatches,combinedEpisodes} from './episode-match.js';
+test('three joined episodes retain the full range for automatic next episode',()=>{assert.deepEqual(combinedEpisodes('Goosebumps T03E19/20/21 - Chilogia'),[{season:3,first:19,last:21}])});
 const sample={id:'Hx6h8_d1Qts',snippet:{title:'MasterChef Profissionais Temporada 1 Episódio 2 completo dublado',liveBroadcastContent:'none'},status:{privacyStatus:'public',embeddable:true},contentDetails:{duration:'PT40M'}};
 test('an exact episode remains playable without an external redirect',()=>{assert.equal(rankEpisode(sample,'MasterChef Profissionais',1,2)?.portugueseAudio,true)});
 test('wrong seasons and episodes cannot score their way into results',()=>{for(const name of ['MasterChef Profissionais S02E02 completo','MasterChef Profissionais S01E03 completo','MasterChef Profissionais episódio 2 completo'])assert.equal(rankEpisode({...sample,snippet:{...sample.snippet,title:name}},'MasterChef Profissionais',1,2),null)});

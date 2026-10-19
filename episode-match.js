@@ -12,7 +12,7 @@ export function episodeMatches(title,season,episode){
  if(pairs.some(m=>Number(m[1]??m[3]??m[5])!==season||Number(m[2]??m[4]??m[6])!==episode)||seasons.some(s=>s!==season)||episodes.some(e=>e!==episode))return false;
  return pairs.length>0||seasons.includes(season)&&episodes.includes(episode);
 }
-export function combinedEpisodes(title){return [...String(title||'').matchAll(/\b(?:s|t)(\d{1,2})[ ._-]*e(\d{1,3})\s*(?:\/|-)\s*e?(\d{1,3})(?!\d)/gi)].map(m=>({season:Number(m[1]),first:Number(m[2]),last:Number(m[3])})).filter(range=>range.last>range.first&&range.last-range.first<10)}
+export function combinedEpisodes(title){return [...String(title||'').matchAll(/\b(?:s|t)(\d{1,2})[ ._-]*e(\d{1,3})((?:\s*(?:\/|-)\s*e?\d{1,3})+)(?!\d)/gi)].map(m=>({season:Number(m[1]),first:Number(m[2]),last:Number(m[3].match(/\d+/g).at(-1))})).filter(range=>range.last>range.first&&range.last-range.first<10)}
 export function rankEpisode(video,title,season,episode,context={}){
  const snippet=video.snippet||{},name=snippet.title||'',seconds=durationSeconds(video.contentDetails?.duration);
  if(!/^[\w-]{11}$/.test(video.id||'')||video.status?.privacyStatus!=='public'||video.status?.embeddable!==true||snippet.liveBroadcastContent!=='none'||video.liveStreamingDetails||seconds<600||bad.test(tokens(name).join(' '))||!episodeMatches(name,season,episode))return null;

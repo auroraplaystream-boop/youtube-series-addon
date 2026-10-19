@@ -1,5 +1,6 @@
 import {rankEpisode} from './episode-match.js';
 import {sameTitleYears,startYear} from './series-identity.js';
+import {seriesPlaylists,loadPlaylistVideos} from './playlist-index.js';
 import express from 'express';
 const app=express();
 const PORT=Number(process.env.PORT||7000);
@@ -8,6 +9,8 @@ const TTL=10*60*1000;
 const allowedOrigin=new Set(['https://auroraplaystream-boop.github.io','https://lunaplaystream.pages.dev']);
 app.use((req,res,next)=>{if(allowedOrigin.has(req.headers.origin)){res.setHeader('Access-Control-Allow-Origin',req.headers.origin);res.setHeader('Vary','Origin')}next()});
 const cache=new Map(),pending=new Map(),metadataCache=new Map();
+const playlistCache=new Map(),playlistPending=new Map();
+async function playlistVideos(id){const previous=playlistCache.get(id);if(previous&&Date.now()-previous.time<3600000)return previous.videos;if(playlistPending.has(id))return playlistPending.get(id);const task=loadPlaylistVideos(youtube,id).then(videos=>{playlistCache.set(id,{time:Date.now(),videos});return videos});playlistPending.set(id,task);try{return await task}finally{playlistPending.delete(id)}}
 const manifest={id:'community.youtube.series.ptbr',version:'1.2.0',name:'YouTube Series PT-BR',description:'Busca episódios publicados no YouTube para Stremio e Luna.',resources:[{name:'stream',types:['series'],idPrefixes:['tt','ytseries:']}],types:['series'],catalogs:[],behaviorHints:{configurable:false}};
 const clean=s=>String(s||'').replace(/[^\p{L}\p{N}\s-]/gu,' ').replace(/\s+/g,' ').trim();
 async function youtube(endpoint,params){if(!KEY)throw Error('Configure YOUTUBE_API_KEY');const url=new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);for(const [k,v] of Object.entries({...params,key:KEY}))url.searchParams.set(k,String(v));const r=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('YouTube API indisponível ('+r.status+').');return r.json();}
@@ -18,15 +21,17 @@ async function titleFor(imdb){
  const r=await fetch(`https://v3-cinemeta.strem.io/meta/series/${imdb}.json`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw Error('Cinemeta indisponível');const j=await r.json(),meta=j.meta;
  if(meta?.id!==imdb||!meta.name)throw Error('A série não foi identificada.');
  let rows=[];try{const response=await fetch('https://v3-cinemeta.strem.io/catalog/series/top/search='+encodeURIComponent(meta.name)+'.json',{signal:AbortSignal.timeout(4000)});if(response.ok)rows=(await response.json()).metas||[]}catch{}
- const data={title:meta.name,releaseYear:startYear(meta.releaseInfo),versionYears:sameTitleYears(meta,rows)};
+ const data={imdb,title:meta.name,releaseYear:startYear(meta.releaseInfo),versionYears:sameTitleYears(meta,rows)};
  if(metadataCache.size>=128)metadataCache.delete(metadataCache.keys().next().value);metadataCache.set(imdb,{time:Date.now(),data});return data;
 }
 function parseId(raw){const parts=raw.split(':');if(parts[0]==='ytseries')return {base:`ytseries:${parts.slice(1,-2).join(':')}`,season:Number(parts.at(-2)),episode:Number(parts.at(-1))};return {base:parts[0],season:Number(parts[1]),episode:Number(parts[2])};}
 async function searchEpisodes(title,season,episode,context={}){
- const key=JSON.stringify([title,season,episode,context.releaseYear,context.versionYears]);const cached=cache.get(key);if(cached&&Date.now()-cached.time<TTL)return cached.data;if(pending.has(key))return pending.get(key);
+ const key=JSON.stringify([context.imdb,title,season,episode,context.releaseYear,context.versionYears]);const cached=cache.get(key);if(cached&&Date.now()-cached.time<TTL)return cached.data;if(pending.has(key))return pending.get(key);
  const task=(async()=>{
   const queries=[`${clean(title)} temporada ${season} episódio ${episode} completo português dublado`,`${clean(title)} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')} dublado`];
   let normalized=[];
+  for(const id of seriesPlaylists[context.imdb]||[]){try{const videos=await playlistVideos(id);normalized.push(...videos.map(video=>rankEpisode(video,title,season,episode,context)).filter(Boolean))}catch(error){console.error('Playlist:',error.message)}}
+  if(normalized.length){normalized.sort((a,b)=>b.score-a.score);cache.set(key,{time:Date.now(),data:normalized});return normalized;}
   for(const q of queries){
    const result=await youtube('search',{part:'snippet',q,type:'video',maxResults:25,videoEmbeddable:'true',safeSearch:'moderate',relevanceLanguage:'pt'});
    const ids=(result.items||[]).map(x=>x.id?.videoId).filter(Boolean);if(!ids.length)continue;
